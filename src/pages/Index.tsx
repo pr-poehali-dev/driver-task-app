@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Icon from '@/components/ui/icon';
+import DeliveryMap from '@/components/DeliveryMap';
 
 interface Task {
   id: number;
@@ -15,6 +16,8 @@ interface Task {
   phone: string;
   status: 'pending' | 'delivered' | 'failed';
   time: string;
+  lat: number;
+  lng: number;
 }
 
 interface Message {
@@ -33,7 +36,9 @@ const Index = () => {
       clientName: 'Иванов Петр',
       phone: '+7 999 123-45-67',
       status: 'pending',
-      time: '10:00'
+      time: '10:00',
+      lat: 55.751244,
+      lng: 37.618423
     },
     {
       id: 2,
@@ -42,7 +47,9 @@ const Index = () => {
       clientName: 'Сидорова Анна',
       phone: '+7 999 234-56-78',
       status: 'pending',
-      time: '10:30'
+      time: '10:30',
+      lat: 55.771899,
+      lng: 37.597576
     },
     {
       id: 3,
@@ -51,7 +58,9 @@ const Index = () => {
       clientName: 'Петров Сергей',
       phone: '+7 999 345-67-89',
       status: 'delivered',
-      time: '09:00'
+      time: '09:00',
+      lat: 55.783421,
+      lng: 37.638174
     },
     {
       id: 4,
@@ -60,7 +69,9 @@ const Index = () => {
       clientName: 'Козлов Иван',
       phone: '+7 999 456-78-90',
       status: 'delivered',
-      time: '09:30'
+      time: '09:30',
+      lat: 55.733974,
+      lng: 37.587093
     }
   ]);
 
@@ -151,10 +162,14 @@ const Index = () => {
 
       <div className="container mx-auto p-4">
         <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsList className="grid w-full grid-cols-4 mb-4">
             <TabsTrigger value="tasks" className="text-base">
               <Icon name="ClipboardList" size={20} className="mr-2" />
               Задачи
+            </TabsTrigger>
+            <TabsTrigger value="map" className="text-base">
+              <Icon name="Map" size={20} className="mr-2" />
+              Карта
             </TabsTrigger>
             <TabsTrigger value="reports" className="text-base">
               <Icon name="BarChart3" size={20} className="mr-2" />
@@ -165,6 +180,32 @@ const Index = () => {
               Чат
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="map" className="space-y-4">
+            <Card className="p-4">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <Icon name="MapPin" size={24} className="text-primary" />
+                Маршрут доставки
+              </h2>
+              <div className="mb-4">
+                <DeliveryMap tasks={tasks} />
+              </div>
+              <div className="flex gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-yellow-500"></div>
+                  <span>В ожидании</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-green-500"></div>
+                  <span>Доставлено</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                  <span>Не доставлено</span>
+                </div>
+              </div>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="tasks" className="space-y-4">
             <div className="grid gap-4">
