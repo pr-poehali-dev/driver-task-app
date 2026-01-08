@@ -5,8 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Icon from '@/components/ui/icon';
 import DeliveryMap from '@/components/DeliveryMap';
+import AdminPanel from '@/components/AdminPanel';
 
 interface Task {
   id: number;
@@ -18,6 +20,7 @@ interface Task {
   time: string;
   lat: number;
   lng: number;
+  driverId: string;
 }
 
 interface Message {
@@ -28,7 +31,7 @@ interface Message {
 }
 
 const Index = () => {
-  const [tasks, setTasks] = useState<Task[]>([
+  const [allTasks, setAllTasks] = useState<Task[]>([
     {
       id: 1,
       zone: 'Центральный район',
@@ -38,7 +41,8 @@ const Index = () => {
       status: 'pending',
       time: '10:00',
       lat: 55.751244,
-      lng: 37.618423
+      lng: 37.618423,
+      driverId: '247'
     },
     {
       id: 2,
@@ -49,7 +53,8 @@ const Index = () => {
       status: 'pending',
       time: '10:30',
       lat: 55.771899,
-      lng: 37.597576
+      lng: 37.597576,
+      driverId: '247'
     },
     {
       id: 3,
@@ -60,7 +65,8 @@ const Index = () => {
       status: 'delivered',
       time: '09:00',
       lat: 55.783421,
-      lng: 37.638174
+      lng: 37.638174,
+      driverId: '247'
     },
     {
       id: 4,
@@ -71,9 +77,13 @@ const Index = () => {
       status: 'delivered',
       time: '09:30',
       lat: 55.733974,
-      lng: 37.587093
+      lng: 37.587093,
+      driverId: '247'
     }
   ]);
+
+  const [currentDriverId, setCurrentDriverId] = useState<string>('247');
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -104,8 +114,15 @@ const Index = () => {
 
   const [newMessage, setNewMessage] = useState('');
 
+  const tasks = allTasks.filter(task => task.driverId === currentDriverId);
+  const availableDrivers = Array.from(new Set(allTasks.map(t => t.driverId)));
+
+  const handleTasksLoad = (loadedTasks: Task[]) => {
+    setAllTasks(loadedTasks);
+  };
+
   const updateTaskStatus = (id: number, status: 'delivered' | 'failed') => {
-    setTasks(tasks.map(task => 
+    setAllTasks(allTasks.map(task => 
       task.id === id ? { ...task, status } : task
     ));
   };
@@ -145,36 +162,69 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="bg-primary text-white p-4 shadow-lg">
-        <div className="container mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Icon name="Truck" size={28} />
-            <div>
-              <h1 className="text-xl font-bold">Водитель #247</h1>
-              <p className="text-sm opacity-90">Сегодня: {new Date().toLocaleDateString('ru-RU')}</p>
+        <div className="container mx-auto">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <Icon name="Truck" size={28} />
+              <div>
+                <h1 className="text-xl font-bold">Водитель #{currentDriverId}</h1>
+                <p className="text-sm opacity-90">Сегодня: {new Date().toLocaleDateString('ru-RU')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={() => setIsAdmin(!isAdmin)}
+                variant="secondary"
+                size="sm"
+              >
+                <Icon name={isAdmin ? "User" : "Settings"} size={18} className="mr-2" />
+                {isAdmin ? 'Водитель' : 'Диспетчер'}
+              </Button>
+              <div className="text-right">
+                <div className="text-2xl font-bold">{deliveredTasks.length}/{tasks.length}</div>
+                <div className="text-xs opacity-90">выполнено</div>
+              </div>
             </div>
           </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold">{deliveredTasks.length}/{tasks.length}</div>
-            <div className="text-xs opacity-90">выполнено</div>
-          </div>
+          
+          {!isAdmin && availableDrivers.length > 1 && (
+            <div className="flex items-center gap-2">
+              <Icon name="User" size={20} />
+              <Select value={currentDriverId} onValueChange={setCurrentDriverId}>
+                <SelectTrigger className="w-[200px] bg-white text-black">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableDrivers.map(driverId => (
+                    <SelectItem key={driverId} value={driverId}>
+                      Водитель #{driverId}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </div>
       </div>
 
       <div className="container mx-auto p-4">
-        <Tabs defaultValue="tasks" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-4">
-            <TabsTrigger value="tasks" className="text-base">
-              <Icon name="ClipboardList" size={20} className="mr-2" />
-              Задачи
-            </TabsTrigger>
-            <TabsTrigger value="map" className="text-base">
-              <Icon name="Map" size={20} className="mr-2" />
-              Карта
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="text-base">
-              <Icon name="BarChart3" size={20} className="mr-2" />
-              Отчет
-            </TabsTrigger>
+        {isAdmin ? (
+          <AdminPanel onTasksLoad={handleTasksLoad} />
+        ) : (
+          <Tabs defaultValue="tasks" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 mb-4">
+              <TabsTrigger value="tasks" className="text-base">
+                <Icon name="ClipboardList" size={20} className="mr-2" />
+                Задачи
+              </TabsTrigger>
+              <TabsTrigger value="map" className="text-base">
+                <Icon name="Map" size={20} className="mr-2" />
+                Карта
+              </TabsTrigger>
+              <TabsTrigger value="reports" className="text-base">
+                <Icon name="BarChart3" size={20} className="mr-2" />
+                Отчет
+              </TabsTrigger>
             <TabsTrigger value="chat" className="text-base">
               <Icon name="MessageSquare" size={20} className="mr-2" />
               Чат
@@ -396,7 +446,8 @@ const Index = () => {
               </div>
             </Card>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        )}
       </div>
     </div>
   );
